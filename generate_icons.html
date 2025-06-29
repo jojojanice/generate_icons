@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        #canvasContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .icon {
+            margin: 10px;
+        }
+        .icon canvas {
+            border: 1px solid #ccc;
+        }
+        .icon label {
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>App Icon Generator</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <div id="canvasContainer"></div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const canvasContainer = document.getElementById('canvasContainer');
+
+        // Define icon sizes and labels
+        const iconSizes = [
+            { size: 1024, label: 'App Store (1024x1024)' },
+            { size: 180, label: 'iPhone App Icon (180x180)' },
+            { size: 120, label: 'iPhone App Icon Old (120x120)' },
+            { size: 152, label: 'iPad App Icon (152x152)' },
+            { size: 76, label: 'iPad App Icon Old (76x76)' },
+            { size: 167, label: 'iPad Pro App Icon (167x167)' },
+            { size: 40, label: 'Settings Icon (40x40)' },
+            { size: 60, label: 'Settings Icon High Res (60x60)' },
+            { size: 29, label: 'Settings Icon Low Res (29x29)' }
+        ];
+
+        imageInput.addEventListener('change', handleImageUpload);
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    canvasContainer.innerHTML = ''; // Clear previous canvases
+                    generateIcons(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function generateIcons(img) {
+            iconSizes.forEach(icon => {
+                const canvas = document.createElement('canvas');
+                canvas.width = icon.size;
+                canvas.height = icon.size;
+                const ctx = canvas.getContext('2d');
+
+                // Calculate scaling to fit image while maintaining aspect ratio
+                const scale = Math.max(icon.size / img.width, icon.size / img.height);
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+
+                // Center the image
+                const offsetX = (icon.size - scaledWidth) / 2;
+                const offsetY = (icon.size - scaledHeight) / 2;
+
+                // Draw the image
+                ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+
+                // Create download link
+                const downloadLink = document.createElement('a');
+                downloadLink.href = canvas.toDataURL('image/png');
+                downloadLink.download = `icon_${icon.size}x${icon.size}.png`;
+                downloadLink.textContent = 'Download';
+
+                // Create container for canvas and label
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'icon';
+                iconDiv.appendChild(canvas);
+                iconDiv.appendChild(document.createElement('br'));
+                const label = document.createElement('label');
+                label.textContent = icon.label;
+                iconDiv.appendChild(label);
+                iconDiv.appendChild(document.createElement('br'));
+                iconDiv.appendChild(downloadLink);
+
+                canvasContainer.appendChild(iconDiv);
+            });
+        }
+    </script>
+</body>
+</html>
